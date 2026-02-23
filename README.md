@@ -4,7 +4,44 @@
 
 Concensus automatically verifies Claude's outputs by running parallel evaluations with **Gemini CLI** and **Codex CLI**, then reaching consensus through iterative debate. When Claude writes code or makes design decisions, Concensus triggers all three models to independently review the work and converge on a shared verdict.
 
-Inspired by [ReConcile (ACL 2024)](https://arxiv.org/abs/2309.13007) and [ICE (2025)](https://arxiv.org/abs/2408.00721) — multi-agent debate protocols that improve LLM reasoning through structured disagreement.
+## Theoretical Background
+
+Concensus builds on a growing body of research showing that **multiple LLMs debating each other produce better results than any single model alone**. The core insight: when models with different training data and architectures independently review the same code, their diverse failure modes cancel out, surfacing real issues while filtering false positives.
+
+### Foundational Concept
+
+The multi-agent approach traces back to Marvin Minsky's [*The Society of Mind*](https://en.wikipedia.org/wiki/Society_of_Mind) (1986) — the idea that intelligence emerges from the interaction of many simple, individually limited agents. Concensus applies this principle to LLM-based code review: Claude, Gemini, and Codex each bring different strengths and blind spots, and their structured disagreement produces more reliable judgments than any single model.
+
+### Core Research
+
+| Paper | Venue | Key Finding | How Concensus Uses It |
+|-------|-------|-------------|----------------------|
+| [**Improving Factuality and Reasoning through Multiagent Debate**](https://arxiv.org/abs/2305.14325) (Du et al., 2023) | ICML 2024 | Multiple LLM instances debating over rounds reduces hallucinations and improves factual validity. More agents and more rounds = better results. | The fundamental premise: multi-round debate between models catches errors that individual models miss. |
+| [**ReConcile: Round-Table Conference Improves Reasoning via Consensus among Diverse LLMs**](https://arxiv.org/abs/2309.13007) (Chen et al., 2023) | ACL 2024 | A round-table conference with confidence-weighted voting across diverse LLM families (ChatGPT, Bard, Claude) improves reasoning by up to 11.4%. **Model diversity is the primary driver of improvement.** | Concensus's debate protocol directly follows ReConcile's structure: independent responses → share all positions → iterative refinement → consensus vote. |
+| [**ICE: Iterative Consensus Ensemble**](https://www.sciencedirect.com/science/article/abs/pii/S0010482525010820) (2025) | Computers in Biology and Medicine | Three LLMs critiquing each other converge in 2-3 rounds on average, achieving up to 27% accuracy improvement with no fine-tuning. | Validates our default of `debate_rounds: 2` — most consensus emerges within 2-3 rounds, with diminishing returns after. |
+| [**Debate or Vote: Which Yields Better Decisions in Multi-Agent LLMs?**](https://arxiv.org/abs/2508.17536) (Choi et al., 2025) | NeurIPS 2025 Spotlight | Majority voting alone accounts for most performance gains in multi-agent systems. Multi-round debate adds marginal benefit in some settings. Debate induces a martingale over belief trajectories. | Informs our hybrid approach: we use majority voting as the fast path (`FULL_CONSENSUS` / `MAJORITY_AGREE`) and only trigger debate rounds when initial votes disagree. |
+| [**Mixture-of-Agents Enhances LLM Capabilities**](https://arxiv.org/abs/2406.04692) (Wang et al., 2024) | arXiv | A layered proposer-aggregator architecture where models improve when presented with other models' outputs — termed "collaborativeness of LLMs." Open-source models outperformed GPT-4o on AlpacaEval. | Validates that even less-capable models provide useful signal as reviewers when their output is aggregated by a stronger model. |
+| [**A Survey on LLM-as-a-Judge**](https://arxiv.org/abs/2411.15594) (Zheng et al., 2024) | arXiv | Comprehensive survey on using LLMs as evaluators. Key challenge: single-model judges exhibit systematic biases (position, verbosity, self-preference). | Motivates using multiple diverse models as judges rather than relying on Claude alone for code review. Cross-model validation reduces individual model biases. |
+
+### Why Three Different Model Families?
+
+ReConcile's key finding is that **model diversity matters more than model capability**. Three instances of the same model debating each other show less improvement than three different models. Concensus leverages this by combining:
+
+- **Claude** (Anthropic) — the author of the code, strong at structured reasoning
+- **Gemini** (Google) — trained on different data, different architecture
+- **Codex** (OpenAI) — code-specialized, different training distribution
+
+This maximizes the "collaborative intelligence" effect described in the Mixture-of-Agents paper.
+
+### Design Decisions Informed by Research
+
+| Decision | Research Basis |
+|----------|---------------|
+| Default 2 debate rounds | ICE shows convergence at 2.3 rounds average |
+| Parallel execution in Round 0 | Independent initial judgments before seeing others (ReConcile) |
+| Majority vote as fast path | "Debate or Vote" shows voting captures most gains |
+| Share all responses in debate | ReConcile's "discussion prompt" with grouped answers |
+| Three model families | ReConcile's finding: diversity > capability |
 
 ## How It Works
 
@@ -52,7 +89,7 @@ Claude writes code (Write/Edit)
 ## Prerequisites
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (v2.0+)
-- [Gemini CLI](https://github.com/google-gemini/gemini-cli) — `npm install -g @anthropic-ai/gemini-cli` or equivalent
+- [Gemini CLI](https://geminicli.com/) — `npm install -g @google/gemini-cli`
 - [Codex CLI](https://github.com/openai/codex) — `npm install -g @openai/codex`
 - Python 3.10+
 
