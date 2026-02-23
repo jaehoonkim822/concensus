@@ -4,7 +4,8 @@ from enum import Enum
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-from core.cli_runner import run_models_parallel, run_gemini, run_codex
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from core.cli_runner import run_models_parallel, run_gemini, run_codex, CLIResult
 
 
 class ConsensusStatus(Enum):
@@ -68,12 +69,13 @@ def _extract_verdict(text: str) -> str:
 def determine_consensus(responses: Dict[str, str]) -> ConsensusStatus:
     verdicts = {name: _extract_verdict(text) for name, text in responses.items()}
     approve_count = sum(1 for v in verdicts.values() if v == "APPROVE")
+    concern_count = sum(1 for v in verdicts.values() if v == "CONCERNS")
     total = len(verdicts)
-    if approve_count == total:
+    if approve_count == total or concern_count == total:
         return ConsensusStatus.FULL_CONSENSUS
-    if approve_count == 0:
-        return ConsensusStatus.FULL_CONSENSUS  # all have concerns = consensus on concerns
-    return ConsensusStatus.MAJORITY_AGREE
+    if approve_count >= total / 2 or concern_count >= total / 2:
+        return ConsensusStatus.MAJORITY_AGREE
+    return ConsensusStatus.NO_CONSENSUS
 
 
 def _format_result(
@@ -92,6 +94,8 @@ def _format_result(
     recommendation = ""
     if status == ConsensusStatus.FULL_CONSENSUS and not concern_models:
         recommendation = "All models agree. Proceed as-is."
+    elif status == ConsensusStatus.FULL_CONSENSUS and not approve_models:
+        recommendation = "All models raised concerns. Address issues before proceeding."
     elif concern_models:
         recommendation = f"Review concerns raised by {', '.join(concern_models)} before proceeding."
     return ConsensusResult(
@@ -109,7 +113,7 @@ def run_consensus(
     config = config or {}
     models = config.get("models", ["gemini", "codex"])
     max_rounds = config.get("debate_rounds", 2)
-    cli_timeout = config.get("cli_timeout", 90)
+    cli_timeout = config.get("cli_timeout", 45)
 
     prompt = build_verification_prompt(mode, context, file_path)
     cli_results = run_models_parallel(prompt, models, timeout=cli_timeout)
@@ -136,16 +140,22 @@ def run_consensus(
     if status == ConsensusStatus.FULL_CONSENSUS:
         return _format_result(status, 0, responses)
 
+    runners = {"gemini": run_gemini, "codex": run_codex}
     for round_num in range(1, max_rounds + 1):
         debate_prompts = {}
         for model in models:
             if model in responses and not responses[model].startswith("[Error"):
                 debate_prompts[model] = build_debate_prompt(context, responses, model)
-        for model, dprompt in debate_prompts.items():
-            runner = run_gemini if model == "gemini" else run_codex
-            result = runner(dprompt, timeout=cli_timeout)
-            if result.success:
-                responses[result.model] = result.output
+        with ThreadPoolExecutor(max_workers=len(debate_prompts)) as executor:
+            futures = {}
+            for model, dprompt in debate_prompts.items():
+                runner = runners.get(model)
+                if runner:
+                    futures[executor.submit(runner, dprompt, cli_timeout)] = model
+            for future in as_completed(futures):
+                result = future.result()
+                if result.success:
+                    responses[result.model] = result.output
         active_responses = {k: v for k, v in responses.items() if not v.startswith("[Error")}
         status = determine_consensus(active_responses)
         if status == ConsensusStatus.FULL_CONSENSUS:

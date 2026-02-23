@@ -70,9 +70,18 @@ def load_config(config_dir: str = ".claude") -> Dict[str, Any]:
 
 
 def should_skip_path(file_path: str, config: Dict[str, Any]) -> bool:
+    basename = os.path.basename(file_path)
     for pattern in config.get("skip_paths", []):
+        if fnmatch.fnmatch(basename, pattern):
+            return True
         if fnmatch.fnmatch(file_path, pattern):
             return True
+        if "/" in pattern:
+            parts = file_path.replace("\\", "/").split("/")
+            for i in range(len(parts)):
+                suffix = "/".join(parts[i:])
+                if fnmatch.fnmatch(suffix, pattern):
+                    return True
     return False
 
 

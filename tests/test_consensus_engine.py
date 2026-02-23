@@ -57,7 +57,7 @@ def test_determine_consensus_full():
     assert status == ConsensusStatus.FULL_CONSENSUS
 
 
-def test_determine_consensus_disagreement():
+def test_determine_consensus_majority_concerns():
     responses = {
         "claude": "VERDICT: APPROVE\nThe code is perfect.",
         "gemini": "VERDICT: CONCERNS\n- Off-by-one error in loop.",
@@ -65,6 +65,16 @@ def test_determine_consensus_disagreement():
     }
     status = determine_consensus(responses)
     assert status == ConsensusStatus.MAJORITY_AGREE
+
+
+def test_determine_consensus_all_concerns():
+    responses = {
+        "claude": "VERDICT: CONCERNS\nMissing validation.",
+        "gemini": "VERDICT: CONCERNS\n- Off-by-one error.",
+        "codex": "VERDICT: CONCERNS\n- Bug in loop.",
+    }
+    status = determine_consensus(responses)
+    assert status == ConsensusStatus.FULL_CONSENSUS
 
 
 def test_run_consensus_integration():

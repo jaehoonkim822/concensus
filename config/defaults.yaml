@@ -1,3 +1,5 @@
+# Reference only. Runtime defaults are in core/config.py DEFAULT_CONFIG.
+# Override via .claude/concensus.local.md YAML frontmatter.
 enabled: true
 trigger_tools:
   - Write

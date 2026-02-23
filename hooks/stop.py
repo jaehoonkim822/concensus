@@ -34,12 +34,12 @@ def detect_design_decision(text: str) -> bool:
 
 
 def format_stop_output(context: str) -> str:
+    snippet = context[:200].replace('"', "'")
     return json.dumps({
         "systemMessage": (
             "[CONSENSUS RECOMMENDED] This response contains an architectural/design decision. "
-            "Consider running cross-validation:\n"
-            f"python3 \"{PLUGIN_ROOT}/scripts/run_design_consensus.py\" "
-            f"--context \"{context[:200]}\""
+            "Before proceeding, consider cross-validating this decision with other models. "
+            f"Key context: {snippet}"
         )
     })
 

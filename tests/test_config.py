@@ -35,6 +35,9 @@ def test_skip_paths_matching():
     assert should_skip_path("package.json", config) is True
     assert should_skip_path("node_modules/foo/bar.js", config) is True
     assert should_skip_path("src/main.py", config) is False
+    assert should_skip_path("/project/src/README.md", config) is True
+    assert should_skip_path("/project/node_modules/foo/bar.js", config) is True
+    assert should_skip_path("/project/src/main.py", config) is False
 
 
 def test_min_change_lines_filter():

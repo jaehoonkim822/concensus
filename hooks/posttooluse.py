@@ -18,7 +18,7 @@ def should_trigger(input_data: dict, config: dict) -> bool:
         return False
     tool_input = input_data.get("tool_input", {})
     file_path = tool_input.get("file_path", "")
-    if should_skip_path(os.path.basename(file_path), config):
+    if should_skip_path(file_path, config):
         return False
     content = _get_change_content(input_data)
     if should_skip_change(content, config):
@@ -53,7 +53,7 @@ def main():
         config = load_config()
         if not should_trigger(input_data, config):
             print(json.dumps({}))
-            sys.exit(0)
+            return
         ctx = build_context_from_input(input_data)
         result = run_consensus(
             mode=ctx["mode"],
