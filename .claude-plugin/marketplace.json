@@ -1,0 +1,18 @@
+{
+  "name": "jaehoonkim822",
+  "owner": {
+    "name": "jaehoonkim822"
+  },
+  "metadata": {
+    "description": "Multi-LLM cross-validation plugins",
+    "homepage": "https://github.com/jaehoonkim822/concensus"
+  },
+  "plugins": [
+    {
+      "name": "concensus",
+      "version": "0.1.0",
+      "source": "./plugin",
+      "description": "Multi-LLM cross-validation plugin - uses Gemini and Codex for consensus-based code review"
+    }
+  ]
+}

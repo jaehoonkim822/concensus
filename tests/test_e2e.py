@@ -4,8 +4,8 @@ import json
 import subprocess
 import pytest
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-PLUGIN_ROOT = os.path.dirname(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "plugin"))
+PLUGIN_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), "plugin")
 
 
 def test_posttooluse_hook_triggers():

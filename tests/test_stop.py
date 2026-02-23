@@ -3,7 +3,7 @@ import sys
 import json
 import pytest
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "plugin"))
 from hooks.stop import detect_design_decision, format_stop_output
 
 

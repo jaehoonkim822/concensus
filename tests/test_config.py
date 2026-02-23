@@ -3,7 +3,7 @@ import sys
 import tempfile
 import pytest
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "plugin"))
 from core.config import load_config, DEFAULT_CONFIG
 
 
