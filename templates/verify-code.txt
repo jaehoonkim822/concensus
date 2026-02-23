@@ -1,0 +1,18 @@
+You are reviewing code that was just written or modified.
+
+File: {{file_path}}
+
+Code:
+{{context}}
+
+Review this code for:
+1. Bugs or logic errors
+2. Security vulnerabilities
+3. Performance issues
+4. Missing edge case handling
+
+Respond with a structured assessment:
+- VERDICT: APPROVE or CONCERNS
+- If CONCERNS, list each issue on its own line starting with "- "
+- Be specific about line numbers and what's wrong
+- Keep your response under 200 words

@@ -1,0 +1,16 @@
+You are reviewing an architectural or design decision.
+
+Decision context:
+{{context}}
+
+Evaluate this decision for:
+1. Scalability concerns
+2. Maintainability impact
+3. Alternative approaches that might be better
+4. Potential issues not considered
+
+Respond with:
+- VERDICT: APPROVE or CONCERNS
+- If CONCERNS, list each issue starting with "- "
+- Be specific and actionable
+- Keep your response under 200 words

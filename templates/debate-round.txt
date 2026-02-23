@@ -1,0 +1,19 @@
+You previously reviewed code/design and gave your assessment.
+
+Original context:
+{{original_context}}
+
+Your previous assessment:
+{{own_response}}
+
+Other reviewers' assessments:
+{{other_responses}}
+
+Considering the other perspectives, do you:
+1. Maintain your position? Explain why.
+2. Change your position? Explain what convinced you.
+
+Respond with:
+- VERDICT: APPROVE or CONCERNS
+- Brief explanation of your reasoning
+- Keep your response under 150 words
