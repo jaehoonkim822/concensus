@@ -1,0 +1,5 @@
+{
+  "description": "Stop hook returns empty JSON for simple non-design responses",
+  "required_keys": [],
+  "expect_empty": true
+}
