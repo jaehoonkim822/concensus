@@ -1,0 +1,9 @@
+{
+  "description": "Stop hook detects design/architecture decisions and returns recommendation",
+  "required_keys": ["systemMessage"],
+  "pattern_checks": {
+    "has_consensus_recommended": "\\[CONSENSUS RECOMMENDED\\]",
+    "has_design_mention": "(architectural|design decision)",
+    "has_key_context": "Key context:"
+  }
+}

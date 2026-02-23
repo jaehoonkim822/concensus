@@ -1,0 +1,5 @@
+{
+  "description": "PostToolUse hook returns empty JSON for skipped .md files",
+  "required_keys": [],
+  "expect_empty": true
+}

@@ -1,0 +1,10 @@
+{
+  "description": "PostToolUse hook triggers consensus review on .py Write with 5+ lines",
+  "required_keys": ["systemMessage"],
+  "pattern_checks": {
+    "has_consensus_header": "\\[CONSENSUS REVIEW\\]",
+    "has_status_line": "Status:\\s+(FULL_CONSENSUS|MAJORITY_AGREE|NO_CONSENSUS|SKIPPED)",
+    "has_round_indicator": "round \\d+",
+    "has_model_verdict": "(Approve:|Concerns raised by:)"
+  }
+}
