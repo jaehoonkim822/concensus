@@ -1,0 +1,20 @@
+enabled: true
+trigger_tools:
+  - Write
+  - Edit
+skip_paths:
+  - "*.md"
+  - "*.json"
+  - "*.yaml"
+  - "*.yml"
+  - "*.lock"
+  - "*.txt"
+  - "node_modules/**"
+  - ".git/**"
+  - "__pycache__/**"
+min_change_lines: 5
+debate_rounds: 2
+models:
+  - gemini
+  - codex
+cli_timeout: 45
