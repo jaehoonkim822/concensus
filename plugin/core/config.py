@@ -11,8 +11,12 @@ DEFAULT_CONFIG = {
     ],
     "min_change_lines": 5,
     "debate_rounds": 2,
+    "stop_debate_rounds": 1,
     "models": ["gemini", "codex"],
     "cli_timeout": 90,
+    "subagent_consensus_enabled": True,
+    "prompt_consensus_enabled": False,
+    "prompt_consensus_min_length": 100,
 }
 
 

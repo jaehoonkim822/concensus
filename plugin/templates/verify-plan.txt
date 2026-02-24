@@ -1,0 +1,16 @@
+You are reviewing an implementation plan or step-by-step proposal.
+
+Plan context:
+{{context}}
+
+Evaluate this plan for:
+1. Completeness — are critical steps missing?
+2. Ordering — are dependencies and sequencing correct?
+3. Risks — what could go wrong or be underestimated?
+4. Alternatives — is there a simpler or more robust approach?
+
+Respond with:
+- VERDICT: APPROVE or CONCERNS
+- If CONCERNS, list each issue starting with "- "
+- Be specific about which steps are problematic
+- Keep your response under 200 words

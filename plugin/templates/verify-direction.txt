@@ -1,0 +1,15 @@
+You are reviewing a proposed direction or approach.
+
+Direction context:
+{{context}}
+
+Evaluate for:
+1. Clarity — is the intent well-defined?
+2. Feasibility — can this realistically be achieved?
+3. Risks — what are the main downsides?
+4. Alternatives — is a better path available?
+
+Respond with:
+- VERDICT: APPROVE or CONCERNS
+- If CONCERNS, list each issue starting with "- "
+- Keep your response under 150 words

@@ -40,8 +40,17 @@ def _load_template(name: str) -> str:
         return f.read()
 
 
+TEMPLATE_MAP = {
+    "code": "verify-code.txt",
+    "design": "verify-design.txt",
+    "plan": "verify-plan.txt",
+    "research": "verify-research.txt",
+    "direction": "verify-direction.txt",
+}
+
+
 def build_verification_prompt(mode: str, context: str, file_path: str = "") -> str:
-    template_name = "verify-code.txt" if mode == "code" else "verify-design.txt"
+    template_name = TEMPLATE_MAP.get(mode, "verify-design.txt")
     template = _load_template(template_name)
     return template.replace("{{context}}", context).replace("{{file_path}}", file_path)
 
@@ -132,8 +141,13 @@ def run_consensus(
 ) -> ConsensusResult:
     config = config or {}
     models = config.get("models", ["gemini", "codex"])
-    max_rounds = config.get("debate_rounds", 2)
-    cli_timeout = config.get("cli_timeout", 45)
+    if mode == "direction":
+        max_rounds = 0
+    elif mode in ("plan", "research"):
+        max_rounds = config.get("stop_debate_rounds", 1)
+    else:
+        max_rounds = config.get("debate_rounds", 2)
+    cli_timeout = config.get("cli_timeout", 90)
 
     prompt = build_verification_prompt(mode, context, file_path)
     log: List[str] = []

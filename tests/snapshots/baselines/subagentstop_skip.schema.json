@@ -1,0 +1,5 @@
+{
+  "description": "SubagentStop hook returns empty JSON for non-matching agents or short messages",
+  "required_keys": [],
+  "expect_empty": true
+}

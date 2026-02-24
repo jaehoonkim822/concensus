@@ -1,0 +1,11 @@
+{
+  "description": "Stop hook runs actual consensus on plan/research content and returns review",
+  "required_keys": ["systemMessage"],
+  "pattern_checks": {
+    "has_consensus_header": "\\[CONSENSUS REVIEW - STOP\\]",
+    "has_result_line": "Result:\\s+(FULL_CONSENSUS|MAJORITY_AGREE|NO_CONSENSUS|SKIPPED)",
+    "has_round_indicator": "round \\d+",
+    "has_model_verdict": "(Approve:|Concerns:)",
+    "has_process_log": "Queried:"
+  }
+}

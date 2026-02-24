@@ -1,0 +1,5 @@
+{
+  "description": "UserPromptSubmit hook returns empty JSON for simple or short prompts",
+  "required_keys": [],
+  "expect_empty": true
+}

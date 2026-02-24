@@ -32,6 +32,42 @@ def test_build_verification_prompt_code():
     assert "Review" in prompt or "review" in prompt
 
 
+def test_build_verification_prompt_plan():
+    prompt = build_verification_prompt(
+        mode="plan",
+        context="1. Set up database\n2. Create API",
+    )
+    assert "1. Set up database" in prompt
+    assert "Completeness" in prompt or "completeness" in prompt.lower()
+
+
+def test_build_verification_prompt_research():
+    prompt = build_verification_prompt(
+        mode="research",
+        context="Findings: Redis outperforms Memcached by 20%",
+    )
+    assert "Redis outperforms" in prompt
+    assert "accuracy" in prompt.lower() or "Factual" in prompt
+
+
+def test_build_verification_prompt_direction():
+    prompt = build_verification_prompt(
+        mode="direction",
+        context="We should adopt event-driven architecture",
+    )
+    assert "event-driven" in prompt
+    assert "Feasibility" in prompt or "feasibility" in prompt.lower()
+
+
+def test_build_verification_prompt_unknown_falls_back():
+    prompt = build_verification_prompt(
+        mode="unknown_mode",
+        context="Some context",
+    )
+    # Should fall back to verify-design.txt
+    assert "Scalability" in prompt or "decision" in prompt.lower()
+
+
 def test_build_debate_prompt():
     prompt = build_debate_prompt(
         original_context="def add(a, b): return a+b",
