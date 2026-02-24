@@ -1,11 +1,16 @@
 import os
 import re
+import sys
 from enum import Enum
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from core.cli_runner import run_models_parallel, run_gemini, run_codex, CLIResult
+
+
+def _progress(msg: str) -> None:
+    print(f"  ⟐ {msg}", file=sys.stderr, flush=True)
 
 
 class ConsensusStatus(Enum):
@@ -79,18 +84,29 @@ def determine_consensus(responses: Dict[str, str]) -> ConsensusStatus:
 
 
 def _format_result(
-    status: ConsensusStatus, round_num: int, responses: Dict[str, str]
+    status: ConsensusStatus,
+    round_num: int,
+    responses: Dict[str, str],
+    process_log: Optional[List[str]] = None,
 ) -> ConsensusResult:
     verdicts = {name: _extract_verdict(text) for name, text in responses.items()}
-    lines = [f"Status: {status.value} (round {round_num})"]
     approve_models = [n for n, v in verdicts.items() if v == "APPROVE"]
     concern_models = [n for n, v in verdicts.items() if v == "CONCERNS"]
+
+    lines = []
+    if process_log:
+        for entry in process_log:
+            lines.append(f"  {entry}")
+        lines.append("")
+
+    lines.append(f"Result: {status.value} (round {round_num})")
     if approve_models:
-        lines.append(f"Approve: {', '.join(approve_models)}")
+        lines.append(f"  Approve: {', '.join(approve_models)}")
     if concern_models:
-        lines.append(f"Concerns raised by: {', '.join(concern_models)}")
+        lines.append(f"  Concerns: {', '.join(concern_models)}")
         for model in concern_models:
-            lines.append(f"  [{model}]: {responses[model][:300]}")
+            lines.append(f"    [{model}]: {responses[model][:300]}")
+
     recommendation = ""
     if status == ConsensusStatus.FULL_CONSENSUS and not concern_models:
         recommendation = "All models agree. Proceed as-is."
@@ -98,6 +114,10 @@ def _format_result(
         recommendation = "All models raised concerns. Address issues before proceeding."
     elif concern_models:
         recommendation = f"Review concerns raised by {', '.join(concern_models)} before proceeding."
+
+    if recommendation:
+        lines.append(f"  → {recommendation}")
+
     return ConsensusResult(
         status=status,
         round=round_num,
@@ -116,21 +136,35 @@ def run_consensus(
     cli_timeout = config.get("cli_timeout", 45)
 
     prompt = build_verification_prompt(mode, context, file_path)
+    log: List[str] = []
+
+    model_list = ", ".join(models)
+    _progress(f"Querying {model_list} for review...")
+    log.append(f"⟐ Queried: {model_list}")
     cli_results = run_models_parallel(prompt, models, timeout=cli_timeout)
 
     responses = {"claude": f"(Original author of the code at {file_path})"}
+    model_status_parts = []
     for r in cli_results:
         if r.success:
             responses[r.model] = r.output
+            model_status_parts.append(f"{r.model} ✓")
+            _progress(f"{r.model} responded")
         else:
             responses[r.model] = f"[Error: {r.error}]"
+            model_status_parts.append(f"{r.model} ✗ ({r.error})")
+            _progress(f"{r.model} failed: {r.error}")
+    log.append(f"⟐ Responses: {', '.join(model_status_parts)}")
 
     successful = [r for r in cli_results if r.success]
     if not successful:
+        _progress("No models responded — skipping consensus")
+        log.append("⟐ No models responded — skipped")
         return ConsensusResult(
             status=ConsensusStatus.SKIPPED,
             round=0,
-            summary="No models responded successfully. Skipping consensus.",
+            summary="\n".join(f"  {e}" for e in log)
+            + "\n\nResult: SKIPPED\n  → Consensus unavailable. Proceed with caution.",
             responses=responses,
             recommendation="Consensus unavailable. Proceed with caution.",
         )
@@ -138,10 +172,15 @@ def run_consensus(
     active_responses = {k: v for k, v in responses.items() if not v.startswith("[Error")}
     status = determine_consensus(active_responses)
     if status == ConsensusStatus.FULL_CONSENSUS:
-        return _format_result(status, 0, responses)
+        _progress("Full consensus on round 0")
+        log.append("⟐ Round 0 → full consensus")
+        return _format_result(status, 0, responses, log)
 
+    log.append("⟐ Round 0 → no consensus, starting debate")
+    _progress(f"No consensus yet — starting debate (up to {max_rounds} rounds)")
     runners = {"gemini": run_gemini, "codex": run_codex}
     for round_num in range(1, max_rounds + 1):
+        _progress(f"Debate round {round_num}/{max_rounds}...")
         debate_prompts = {}
         for model in models:
             if model in responses and not responses[model].startswith("[Error"):
@@ -159,6 +198,10 @@ def run_consensus(
         active_responses = {k: v for k, v in responses.items() if not v.startswith("[Error")}
         status = determine_consensus(active_responses)
         if status == ConsensusStatus.FULL_CONSENSUS:
-            return _format_result(status, round_num, responses)
+            _progress(f"Consensus reached on round {round_num}")
+            log.append(f"⟐ Round {round_num}/{max_rounds} → consensus reached")
+            return _format_result(status, round_num, responses, log)
+        log.append(f"⟐ Round {round_num}/{max_rounds} → {status.value}")
 
-    return _format_result(status, max_rounds, responses)
+    _progress(f"Debate ended — {status.value}")
+    return _format_result(status, max_rounds, responses, log)

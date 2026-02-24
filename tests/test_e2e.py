@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "plu
 PLUGIN_ROOT = os.path.join(os.path.dirname(os.path.dirname(__file__)), "plugin")
 
 
-def _run_hook(hook_name, input_data, timeout=120):
+def _run_hook(hook_name, input_data, timeout=200):
     start = time.monotonic()
     proc = subprocess.run(
         ["python3", os.path.join(PLUGIN_ROOT, "hooks", hook_name)],
@@ -24,6 +24,7 @@ def _run_hook(hook_name, input_data, timeout=120):
     return output, proc.returncode, duration_ms
 
 
+@pytest.mark.timeout(300)
 def test_posttooluse_hook_triggers(snapshot_e2e):
     input_data = {
         "hook_event_name": "PostToolUse",

@@ -12,7 +12,7 @@ DEFAULT_CONFIG = {
     "min_change_lines": 5,
     "debate_rounds": 2,
     "models": ["gemini", "codex"],
-    "cli_timeout": 45,
+    "cli_timeout": 90,
 }
 
 

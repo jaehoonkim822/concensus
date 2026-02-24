@@ -14,8 +14,13 @@ def test_validate_schema_passes_for_valid_trigger_output():
     output = {
         "systemMessage": (
             "[CONSENSUS REVIEW]\n"
-            "Status: FULL_CONSENSUS (round 0)\n"
-            "Approve: claude, codex, gemini"
+            "  ⟐ Queried: gemini, codex\n"
+            "  ⟐ Responses: gemini ✓, codex ✓\n"
+            "  ⟐ Round 0 → full consensus\n"
+            "\n"
+            "Result: FULL_CONSENSUS (round 0)\n"
+            "  Approve: claude, codex, gemini\n"
+            "  → All models agree. Proceed as-is."
         )
     }
     result = validate_schema(output, "posttooluse_trigger")
